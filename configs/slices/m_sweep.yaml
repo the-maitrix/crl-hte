@@ -1,0 +1,34 @@
+# Bottleneck-dimension sweep: m in {2, 3, 5, 10, 20, 50} at fixed z_dim=10,
+# with 5 CATE-relevant latent coordinates. Unified paper protocol: one fixed
+# DGP, ten paired data resamples, shared encoder seed.
+
+slice:
+  name: m_sweep
+  description: Vary phi_dim (bottleneck) at z_dim=10, z_s_fraction=0.5.
+  n_trials: 10
+  dgp_seeds: [42]
+  shared_encoder_seed: 42
+  historical_seed_mode: trial
+  encoder_historical_seed: 1000
+
+encoder:
+  lambda_loss_s: 2.0
+
+sweep:
+  alpha:        [0.0]
+  delta:        [0.0]
+  z_dim:        [10]
+  z_s_fraction: [0.5]
+  num_observational: [10000]
+  phi_dim:      [2, 3, 5, 10, 20, 50]
+  arch:         [medium]
+  lambda_loss_s: [2.0]
+  sample_sizes: [50, 100, 250, 500, 750]
+  learners: [dml_learner, x_learner]
+  y_types: [h_y, true_y]
+  methods: [encoder_pred, mi_mine_cond, mi_infonce_cond, autoencoder,
+            pca, pls, ica, raw_x]
+  diagnostics: false
+
+cate:
+  regressor: histgbr

@@ -1,0 +1,90 @@
+# Semi-synthetic DGP from the UPMC perinatal dataset.
+#
+# Real (X, S) drawn from data/all_patients/*.csv via the cache built by
+# scripts/build_semisynth.py. Synthetic treatment T and τ_S(X) effect injected
+# on top. Output dict matches src/crl_hte/dgp.py so runner.py is uniform.
+#
+# Cohorts
+#   H : MHP_OnboardingStatus is missing or 0 (Pending/not onboarded). T ≡ 0.
+#   E : MHP_OnboardingStatus == 1 (Done).                              T ~ Bern(0.5).
+
+data:
+  root: data/all_patients
+  comprehensive_csv: comprehensive/all_features_processed.csv
+  ehr_csv: ehr_only/all_features_processed.csv
+  mhp_csv: mhp_only/all_features_processed.csv
+  cache_dir: data/semisynth_cache
+
+cohort:
+  mhp_status_col: MHP_OnboardingStatus
+  outcome_col: PPD_Target
+  include_pending_in_historical: true
+  diagnosis_feature_prefixes: [Diabetes_, Anxiety_, Depression_, Postpartum_Depression_, HTN_, GestHTN, MentalBehavSUD_, Bipolar_, OCD_, Trauma_Reaction_]
+  diagnosis_min_reference_rate: 0.01
+  min_pending_diagnosis_prevalence_ratio: 0.5
+  # Always-drop: identifier columns and post-PPD outcome columns (leakage).
+  id_cols: [Patient_Level_ID1, Patient_Level_ID2, Pregnancy_Level_ID,
+            MHP_UserId, PregnancyId]
+  drop_outcome_cols: [PPD_Target, BIRTH_WEIGHT, NICU_IND, STILLBORN,
+                      EST_GEST_AGE_DAYS, BABY_DISPOSITION, NICUREADMISSION]
+
+features:
+  # Drop X cols whose missing-rate exceeds tau_drop, UNLESS their _missing
+  # indicator's |corr(., Y)| exceeds tau_inform (then keep the column itself).
+  tau_drop: 0.5
+  tau_inform: 0.05
+  drop_missing_indicators: true   # strip the *_missing companion columns from X
+  # Leakage filter: drop any X column whose name contains one of these
+  # substrings. Postpartum-window features are co-temporal with the synthetic
+  # post-pregnancy treatment T and the postpartum diagnosis fields are direct
+  # PPD labels (μ₀ AUC → 1.0 if kept).
+  drop_patterns: [Postpartum, _Postpartum, Depression, PHQ, RX_PosIntentional]
+  # L1-logistic feature selection: keep the top-K X columns by |β| from a
+  # sparse fit. K=40 is small enough to be interpretable on a slide and large
+  # enough that S still has room to contribute to logit Y.
+  n_features: 40
+
+surrogate:
+  source: common_diagnoses
+  diagnosis_feature_prefixes: [Diabetes_, Anxiety_, Depression_, HTN_, GestHTN, MentalBehavSUD_, Bipolar_, OCD_, Trauma_Reaction_, Autoimmune_, Cardiomyopathy_, Kidney_, LiverGallbladder_, GDM_]
+  diagnosis_timepoints: [FirstTri, SecondTri, ThirdTri, After_FirstPNV]
+  min_prevalence: 0.005
+  max_prevalence: 0.995
+  n_extras_for_pca: 10
+  s_dim: 5
+  standardize: true
+  # Legacy mhp_extras mode can also pull matching common-feature columns.
+  include_common_patterns: []
+
+p_s_given_x:
+  # Linear-Gaussian: S = X·Wᵀ + b + N(0, diag(σ²)) — fit by ridge on E.
+  ridge_alpha: 1.0
+
+baseline_y:
+  # Two separate historical fits keep the S→Y signal from being cannibalized by X.
+  # At runtime: logit p_t = μ_X(X) + lambda_s · (S(t) · β_S)
+  C_mu_x: 1.0
+  C_beta_s: 1.0
+  max_iter: 500
+  cv_folds: 5
+  lambda_s: 2.0
+
+dgp:
+  # Synthetic effect on S, anchored to β_S so the logit shift on Y is exactly
+  # g(X) by construction (no cancellation):
+  #   g(X)   = γ₀ + X[rel_idx] · γ_x      (scalar heterogeneity)
+  #   τ_S(X) = g(X) · β_S / ‖β_S‖²
+  # γ_x is variance-normalized so std(g(X)) == target_logit_std.
+  rel_x_frac: 0.25                 # frac of (selected) X dims that drive g(X)
+  target_logit_std: 0.5            # desired std of g(X); the logit shift has std lambda_s times this
+  tau_sign: neg                    # neg | pos | both
+                                   # neg = forces every seed to produce a "treatment-helpful"
+                                   # effect (treatment lowers P(PPD)). Combined with the
+                                   # output-side Y/τ flip in semisynth.py, the reported τ_true
+                                   # is positive-mean ("higher τ = better treatment effect"),
+                                   # matching the convention used by the synthetic experiment
+                                   # pipelines.
+  sigma_S_frac: 0.1                # observation noise on S, as frac of S₀ std
+  y_mode: binary                   # binary | risk
+  sigma_Y: 0.05                    # only used if y_mode == risk
+  dgp_seed: 0

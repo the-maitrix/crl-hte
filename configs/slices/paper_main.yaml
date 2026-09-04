@@ -1,0 +1,38 @@
+# Revised-manuscript synthetic headline. Run this before new experiments.
+slice:
+  name: paper_main
+  description: Reproduce the synthetic results reported in the paper.
+  n_trials: 10
+  dgp_seeds: [42]
+  shared_encoder_seed: 42
+  # Camera-ready parity: h is refit on a fresh historical draw per trial.
+  # New reviewer sweeps retain the cleaner default (one nested H pool per DGP).
+  historical_seed_mode: trial
+  # The camera-ready pretrain job used trial 1000's H and all array tasks
+  # loaded that shared encoder while refitting h on their own H draw.
+  encoder_historical_seed: 1000
+
+dgp:
+  num_observational: 10000
+  # Preserve the paper's seeded sampling pool; sample_sizes caps every fit.
+  num_experimental: 5000
+
+sweep:
+  alpha: [0.0]
+  delta: [0.0]
+  z_dim: [10]
+  z_s_fraction: [0.5]
+  num_observational: [10000]
+  phi_dim: [10]
+  arch: [medium]
+  lambda_loss_s: [2.0]
+  sample_sizes: [50, 100, 250, 500, 750]
+  learners: [x_learner, dml_learner]
+  y_types: [h_y, true_y]
+  methods: [encoder_pred, mi_mine_cond, mi_infonce_cond, autoencoder,
+            pca, pls, ica, raw_x]
+  diagnostics: false
+
+cate:
+  # The saved paper parquet records HistGradientBoosting for every cell.
+  regressor: histgbr

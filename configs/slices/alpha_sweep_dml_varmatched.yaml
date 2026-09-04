@@ -1,0 +1,34 @@
+# Sufficiency-(ii) violation sweep with final-CATE variance held fixed.
+# alpha=0 is exactly the canonical main-body DGP; only the Z_y component is
+# rescaled, and it has zero weight at alpha=0.
+
+slice:
+  name: alpha_sweep_dml_varmatched
+  description: DML sufficiency-(ii) sweep with variance-matched scalar CATE components.
+  n_trials: 10
+  dgp_seeds: [42]
+  shared_encoder_seed: 42
+  historical_seed_mode: trial
+  encoder_historical_seed: 1000
+
+encoder:
+  lambda_loss_s: 2.0
+
+sweep:
+  alpha: [0.0, 0.25, 0.5, 0.75, 1.0]
+  delta: [0.0]
+  z_dim: [10]
+  z_s_fraction: [0.5]
+  num_observational: [10000]
+  phi_dim: [10]
+  arch: [medium]
+  lambda_loss_s: [2.0]
+  sample_sizes: [50, 100, 250, 500, 750]
+  learners: [dml_learner]
+  y_types: [h_y, true_y]
+  methods: [encoder_pred, mi_mine_cond, mi_infonce_cond, autoencoder,
+            pca, pls, ica, raw_x]
+  diagnostics: false
+
+cate:
+  regressor: histgbr

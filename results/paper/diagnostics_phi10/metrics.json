@@ -1,0 +1,236 @@
+{
+  "phi_dim": 10,
+  "historical_representation_train_n": 10000,
+  "historical_diagnostic_holdout_n": 5000,
+  "exact_by_construction": {
+    "treatment_randomization": true,
+    "no_direct_treatment_to_target_path": true,
+    "shared_historical_experimental_outcome_equation": true
+  },
+  "treatment_fraction": 0.4996,
+  "treatment_predictability_auc": 0.50594284380342,
+  "domain_predictability_auc": 0.75153875,
+  "cross_sample_overlap": {
+    "historical_inside_05_95": 0.8125,
+    "experimental_inside_05_95": 0.9915,
+    "historical_quantiles": [
+      0.009372491781453413,
+      0.022220928947190917,
+      0.4270090030732757,
+      0.7558616722705173,
+      0.8446238762281523
+    ],
+    "experimental_quantiles": [
+      0.08482901551430726,
+      0.28774223903524127,
+      0.6509270504830351,
+      0.8095923358358831,
+      0.8885263479612122
+    ],
+    "median_experimental_to_historical_nn_ratio": 1.0757046970543513,
+    "experimental_within_historical_nn_p95": 0.9444
+  },
+  "joint_support_by_treatment": {
+    "treatment_0": {
+      "domain_auc": 0.7165629076218487,
+      "experimental_inside_05_95": 0.9995004995004995,
+      "median_experimental_to_historical_nn_ratio": 1.1294769817041328,
+      "experimental_within_historical_nn_p95": 0.94
+    },
+    "treatment_1": {
+      "domain_auc": 0.8098118128133136,
+      "experimental_inside_05_95": 0.9789894947473737,
+      "median_experimental_to_historical_nn_ratio": 1.149258323444064,
+      "experimental_within_historical_nn_p95": 0.9513333333333334
+    }
+  },
+  "surrogacy": {
+    "without_treatment_logloss": 0.26302059671803835,
+    "with_treatment_logloss": 0.26401289327883287,
+    "treatment_incremental_logloss": -0.0009922965607945256,
+    "without_treatment_auc": 0.889996717820049,
+    "with_treatment_auc": 0.890080340471467
+  },
+  "comparability": {
+    "historical_auc": 0.8902591766242485,
+    "experimental_control_auc": 0.8887360823124713,
+    "historical_logloss": 0.2649067980206691,
+    "experimental_control_logloss": 0.29813631977182486,
+    "historical_calibration_bias": 0.00907486787935119,
+    "experimental_control_calibration_bias": -0.00025595824581337023
+  },
+  "sufficiency_i": {
+    "encoder_pred": {
+      "restricted_logloss": 0.2939053490999869,
+      "augmented_logloss": 0.2873604975857879,
+      "incremental_logloss": 0.006544851514198979,
+      "restricted_auc": 0.8708974720213019,
+      "augmented_auc": 0.8761083014892179
+    },
+    "mi_mine_cond": {
+      "restricted_logloss": 0.2968889686296554,
+      "augmented_logloss": 0.2880238754185185,
+      "incremental_logloss": 0.008865093211136932,
+      "restricted_auc": 0.8725875014435905,
+      "augmented_auc": 0.8796021450548054
+    },
+    "mi_infonce_cond": {
+      "restricted_logloss": 0.2922482132390636,
+      "augmented_logloss": 0.2820893477817139,
+      "incremental_logloss": 0.010158865457349675,
+      "restricted_auc": 0.8737971380163266,
+      "augmented_auc": 0.8829285746917243
+    },
+    "pls": {
+      "restricted_logloss": 0.285840553123542,
+      "augmented_logloss": 0.2840847905844468,
+      "incremental_logloss": 0.001755762539095207,
+      "restricted_auc": 0.8773230456055404,
+      "augmented_auc": 0.881900823421152
+    },
+    "pca": {
+      "restricted_logloss": 0.29668083285319097,
+      "augmented_logloss": 0.2883847753607144,
+      "incremental_logloss": 0.008296057492476583,
+      "restricted_auc": 0.8740369088124705,
+      "augmented_auc": 0.8804712787217748
+    },
+    "ica": {
+      "restricted_logloss": 0.2934918867909316,
+      "augmented_logloss": 0.28333039163427404,
+      "incremental_logloss": 0.01016149515665754,
+      "restricted_auc": 0.8750066327128518,
+      "augmented_auc": 0.8816369336691827
+    },
+    "autoencoder": {
+      "restricted_logloss": 0.292754570844452,
+      "augmented_logloss": 0.28240158991825276,
+      "incremental_logloss": 0.01035298092619924,
+      "restricted_auc": 0.8733224202152037,
+      "augmented_auc": 0.8841963805108621
+    }
+  },
+  "sufficiency_ii_historical_proxy": {
+    "encoder_pred": {
+      "restricted_r2": 0.37225226350043783,
+      "augmented_r2": 0.3812888459940045,
+      "incremental_r2": 0.009036582493566647
+    },
+    "mi_mine_cond": {
+      "restricted_r2": 0.3361933753162228,
+      "augmented_r2": 0.35773889777292844,
+      "incremental_r2": 0.021545522456705657
+    },
+    "mi_infonce_cond": {
+      "restricted_r2": 0.33288699528330223,
+      "augmented_r2": 0.34881631571249383,
+      "incremental_r2": 0.015929320429191596
+    },
+    "pls": {
+      "restricted_r2": 0.33821424896621005,
+      "augmented_r2": 0.3713901675521554,
+      "incremental_r2": 0.033175918585945374
+    },
+    "pca": {
+      "restricted_r2": 0.22640742015702767,
+      "augmented_r2": 0.34923329442766277,
+      "incremental_r2": 0.1228258742706351
+    },
+    "ica": {
+      "restricted_r2": 0.21619712991413578,
+      "augmented_r2": 0.3431843848391212,
+      "incremental_r2": 0.12698725492498544
+    },
+    "autoencoder": {
+      "restricted_r2": 0.21023624954423073,
+      "augmented_r2": 0.34793818969413676,
+      "incremental_r2": 0.13770194014990603
+    }
+  },
+  "sufficiency_ii_potential": {
+    "encoder_pred": {
+      "treatment_0": {
+        "restricted_r2": 0.4192977265744468,
+        "augmented_r2": 0.4339117818016474,
+        "incremental_r2": 0.014614055227200606
+      },
+      "treatment_1": {
+        "restricted_r2": 0.3759236028262238,
+        "augmented_r2": 0.4138015144996583,
+        "incremental_r2": 0.03787791167343452
+      }
+    },
+    "mi_mine_cond": {
+      "treatment_0": {
+        "restricted_r2": 0.36432769513012075,
+        "augmented_r2": 0.41438037017660373,
+        "incremental_r2": 0.050052675046482975
+      },
+      "treatment_1": {
+        "restricted_r2": 0.3224912344658995,
+        "augmented_r2": 0.3996712593399745,
+        "incremental_r2": 0.07718002487407499
+      }
+    },
+    "mi_infonce_cond": {
+      "treatment_0": {
+        "restricted_r2": 0.3520555295735148,
+        "augmented_r2": 0.40889695589298236,
+        "incremental_r2": 0.056841426319467536
+      },
+      "treatment_1": {
+        "restricted_r2": 0.3173866278774486,
+        "augmented_r2": 0.40112868129920703,
+        "incremental_r2": 0.08374205342175844
+      }
+    },
+    "pls": {
+      "treatment_0": {
+        "restricted_r2": 0.3962072086376053,
+        "augmented_r2": 0.42235128898139807,
+        "incremental_r2": 0.026144080343792786
+      },
+      "treatment_1": {
+        "restricted_r2": 0.3603874838225783,
+        "augmented_r2": 0.40470750977733433,
+        "incremental_r2": 0.04432002595475604
+      }
+    },
+    "pca": {
+      "treatment_0": {
+        "restricted_r2": 0.2370592214730745,
+        "augmented_r2": 0.40264324331432577,
+        "incremental_r2": 0.16558402184125126
+      },
+      "treatment_1": {
+        "restricted_r2": 0.20932199051413755,
+        "augmented_r2": 0.39611544865433884,
+        "incremental_r2": 0.1867934581402013
+      }
+    },
+    "ica": {
+      "treatment_0": {
+        "restricted_r2": 0.23472829023524824,
+        "augmented_r2": 0.400006743518057,
+        "incremental_r2": 0.16527845328280874
+      },
+      "treatment_1": {
+        "restricted_r2": 0.20986676173699945,
+        "augmented_r2": 0.39517530767185666,
+        "incremental_r2": 0.1853085459348572
+      }
+    },
+    "autoencoder": {
+      "treatment_0": {
+        "restricted_r2": 0.23007899612565608,
+        "augmented_r2": 0.4047947322759903,
+        "incremental_r2": 0.1747157361503342
+      },
+      "treatment_1": {
+        "restricted_r2": 0.2069848792812627,
+        "augmented_r2": 0.3971986334536582,
+        "incremental_r2": 0.1902137541723955
+      }
+    }
+  }
+}

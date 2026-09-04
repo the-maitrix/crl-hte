@@ -1,0 +1,30 @@
+slice:
+  name: raw_x_comparison
+  description: Raw-X outcome prediction with and without auxiliary outcomes.
+  n_trials: 10
+  dgp_seeds: [42]
+  shared_encoder_seed: 42
+  historical_seed_mode: trial
+  encoder_historical_seed: 1000
+
+dgp:
+  num_observational: 10000
+  num_experimental: 5000
+
+sweep:
+  alpha: [0.0]
+  delta: [0.0]
+  z_dim: [10]
+  z_s_fraction: [0.5]
+  num_observational: [10000]
+  phi_dim: [10]
+  arch: [medium]
+  lambda_loss_s: [2.0]
+  sample_sizes: [50, 100, 250, 500, 750]
+  learners: [x_learner, dml_learner]
+  y_types: [h_y]
+  methods: [raw_x, surrogate_index]
+  diagnostics: false
+
+cate:
+  regressor: histgbr

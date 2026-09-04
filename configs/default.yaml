@@ -1,0 +1,155 @@
+# Default (canonical "center") configuration.
+#
+# Each slice config inherits from this and overrides only the axes it varies.
+# CLI dot-overrides further override anything (e.g. `encoder.phi_dim=10`).
+
+slice:
+  name: default
+  description: Canonical center — alpha=0, delta=0, z_dim=10, phi=5, all methods.
+  n_trials: 5             # data-sample trials per DGP seed (inner)
+  base_seed: 1000
+  # `dgp_seeds`: list of outer DGP-randomness seeds. [42] reproduces the rebuttal
+  # tables (fixed DGP, sample-only variance). Use [42,43,44,45,46] for a full
+  # 5×5 = 25-row DGP × data study so you can decompose the variance.
+  # Set an entry to null to re-roll the DGP per data trial under that slot.
+  dgp_seeds: [42]
+  # Encoder init seed. Constant int = match step_sufficiency2's FIXED_SEED=42.
+  # null = derive a deterministic per-trial encoder seed.
+  shared_encoder_seed: 42
+  # Optional: dump the full true-CATE arrays to .npy alongside results.parquet.
+  save_tau_arrays: false
+
+dgp:
+  x_dim: 1000
+  s_dim: 10
+  y_dim: 1
+  num_observational: 10000
+  num_experimental: 5000
+  sigma_S: 0.1
+  sigma_Y: 0.1
+  treatment_effect: linear        # 'linear' | 'nonlinear' (currently metadata only)
+  # Per-stage nonlinearity in the DGP. Each independently controls whether
+  # the corresponding map is linear or warped by a non-saturating, non-squashing
+  # element-wise function.
+  #   'linear'      — identity (default; matches main_synthetic)
+  #   'leaky_relu'  — slope 1 on positives, 0.5 on negatives (no info loss)
+  #   'silu'        — x · sigmoid(x); smooth, near-linear far from 0
+  #   'cubic'       — x + 0.1·x³; gentle bend, monotonic
+  x_to_z_nonlinearity: linear     # warps Z = f(X · W_xz)
+  z_to_s_nonlinearity: linear     # warps each Z-projection into S (β_1, γ_z, γ_y_norm)
+  s_to_y_nonlinearity: linear     # warps S · w_sy on its way to Y (bypass stays linear)
+
+encoder:
+  batch_size: 256
+  lr: 1.0e-3
+  epochs_obs: 200
+  early_stopping_patience: 15
+  early_stopping_min_delta: 1.0e-4
+  # Fraction of obs to hold out for validation; when > 0 early-stopping
+  # tracks val loss instead of train loss. 0 = legacy (train-loss only).
+  val_frac: 0.0
+  # When true, snapshot the model whenever the early-stop metric hits a new
+  # low, then restore it at the end — so the cached/returned encoder is the
+  # *best* epoch's weights, not the last (potentially overfit) ones. Default
+  # false to preserve legacy cache compatibility; new slice configs that opt
+  # into val-loss early-stopping should also set this true.
+  select_best_epoch: false
+  lambda_loss_s: 2.0              # MI objectives default; sufficiency uses 20.0
+  vib_beta: 1.0e-3
+  infonce_temperature: 0.07
+  proj_dim: 64
+  finetune_lr: 1.0e-3
+  finetune_epochs: 100
+  finetune_batch_size: 64
+  lambda_finetune_y: 1.0
+  finetune_freeze_backbone: false   # if true, only the encoder's last Linear
+                                    # layer + heads get gradient updates. Use
+                                    # to preserve pretrained Z_s representation
+                                    # when finetuning on small T=1 samples.
+
+# Sweep axes for the canonical-center slice. Override these in slice configs
+# to vary one (or more) axes at a time.
+sweep:
+  alpha:        [0.0]
+  delta:        [0.0]
+  z_dim:        [10]
+  z_s_fraction: [0.5]
+  phi_dim:      [5, 10]
+  arch:         [medium]
+  lambda_loss_s: [2.0]
+  sample_sizes: [100, 500, 1000, 2000, 5000]
+  # T-learner is a biased X-learner; main_synthetic re-adds it for the canonical
+  # base-case table. Other slices (the comprehensive sweeps) drop it.
+  learners:     [x_learner, dml_learner]
+  y_types:      [true_y, h_y]
+  methods:
+    - encoder_pred        # MSE(Y) + λ·MSE(S) — main method (predictive variant)
+    - encoder_no_s
+    - encoder_no_y
+    # mi_mine and mi_infonce removed: their unconditional Y term doesn't
+    # match the stated objective I(Y;φ|S) + λ·I(S;φ). Use the *_cond
+    # variants which estimate the joint MI and decompose via the chain rule.
+    # - mi_mine
+    # - mi_infonce
+    - mi_mine_cond        # joint (Y,S) anchor → tracks I(φ;Y|S)+λ·I(φ;S)
+    - mi_infonce_cond     # same conditional objective via InfoNCE
+    - mi_vib
+    - autoencoder
+    - pca
+    - pls
+    - ica
+    - raw_x
+    - surrogate_index   # Athey-style h(X,S) on H, CATE on raw X in E
+    - constant_ate      # oracle constant-effect PEHE reference (=1 normalized)
+    # baseline_xs removed: heterogeneity wrt [X, S] mixes covariates with the
+    # mediator and isn't a meaningful baseline.
+  # Default OFF: diagnostics (suff-i / suff-ii probes) take ~3h+ per cell and
+  # eat the wall-time budget, frequently starving the second structural cell
+  # (e.g. φ=10) before it ever starts. Opt in per-slice when you actually need
+  # them (set `diagnostics: true` in the slice yaml, or DIAGNOSTICS=true env).
+  diagnostics: false
+  finetune: false
+  finetune_methods: [encoder_pred]
+  finetune_modes:   [ftS]              # ftS only by default — ftY / ftSY use Y
+                                       # and create a leakage path between the
+                                       # encoder and the CATE eval target. Add them
+                                       # explicitly in a slice if you want the
+                                       # leaky ablation for comparison.
+  finetune_t1_only: true               # restrict finetune data to T=1 rows.
+                                       # Sufficiency-(ii) is about the treated
+                                       # X→S mapping that historical T=0 data
+                                       # couldn't reveal — clean target for ftS.
+  finetune_split_frac: 0.5             # hold out this fraction of E for finetune.
+                                       # Frozen + finetuned variants both eval on
+                                       # the disjoint fold B. 0 = no split (in-
+                                       # sample finetune, leaky). Ignored when
+                                       # finetune_xfit_folds > 1.
+  finetune_xfit_folds: 1               # K-fold cross-fitted finetune: every row of
+                                       # E is encoded by an encoder that did NOT
+                                       # see it during finetune. Eval on full E,
+                                       # zero leakage. Cost: K finetunes per cell
+                                       # (vs 1). 1 = no xfit, use single-fold path.
+
+cate:
+  # Base regressor inside the CATE meta-learners (T, X, DML).
+  # Three modes:
+  #   'histgbr'   — HistGradientBoostingRegressor everywhere. OpenMP-parallel,
+  #                 ~3-5× faster than 'gbr' on high-dim raw_x (x_dim=1000).
+  #   'gbr'       — GradientBoostingRegressor everywhere. Sequential, what
+  #                 step_mi_objectives originally used. Slowest but matches
+  #                 the historical baseline numbers exactly.
+  #   'threshold' — sample-size-gated: 'threshold_below' for n < threshold_n,
+  #                 'threshold_at_or_above' for n >= threshold_n. Applied
+  #                 uniformly to ALL methods (encoders + raw_x), so the
+  #                 cross-method comparison stays apples-to-apples.
+  regressor: histgbr        # 'histgbr' | 'gbr' | 'threshold'
+  n_iterations: 40          # max_iter (histgbr) / n_estimators (gbr)
+  # Used only when regressor == 'threshold':
+  threshold_n: 1000
+  threshold_below: gbr            # n < threshold_n → this regressor
+  threshold_at_or_above: histgbr  # n >= threshold_n → this regressor
+
+runtime:
+  device: null            # null = auto-detect (cuda > mps > cpu)
+  output_root: results/synthetic/raw
+  cache_dir: results/synthetic/encoders

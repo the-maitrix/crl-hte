@@ -1,0 +1,21 @@
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+.venv/
+*.egg-info/
+
+# Caches and raw outputs are not tracked. The canonical paper tables live in
+# results/paper/ which IS tracked.
+results/synthetic/
+results/ohie/
+*.pt
+*.parquet
+!results/paper/*.parquet
+
+# SLURM logs from cluster runs.
+logs/
+
+# Real-data inputs (e.g. OHIE PUF zip) are not tracked.
+data/

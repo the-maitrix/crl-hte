@@ -1,0 +1,34 @@
+# Surrogacy-violation sweep with the direct and mediated CATE components
+# variance-matched at delta=1 under the actual latent covariance.
+# delta=0 is exactly the canonical main-body DGP.
+
+slice:
+  name: delta_sweep_dml_varmatched
+  description: DML surrogacy sweep with variance-matched scalar CATE components.
+  n_trials: 10
+  dgp_seeds: [42]
+  shared_encoder_seed: 42
+  historical_seed_mode: trial
+  encoder_historical_seed: 1000
+
+encoder:
+  lambda_loss_s: 2.0
+
+sweep:
+  alpha: [0.0]
+  delta: [0.0, 0.5, 1.0, 2.0]
+  z_dim: [10]
+  z_s_fraction: [0.5]
+  num_observational: [10000]
+  phi_dim: [10]
+  arch: [medium]
+  lambda_loss_s: [2.0]
+  sample_sizes: [50, 100, 250, 500, 750]
+  learners: [dml_learner]
+  y_types: [h_y, true_y]
+  methods: [encoder_pred, mi_mine_cond, mi_infonce_cond, autoencoder,
+            pca, pls, ica, raw_x]
+  diagnostics: false
+
+cate:
+  regressor: histgbr
